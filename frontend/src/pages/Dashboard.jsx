@@ -7,12 +7,16 @@ import GlobeComponent from "../Components/Globe";
 import OpinionPopUp from "../Components/opinionPopUp";
 import OpinionCard from "../Components/OpinionCard";
 import { addPoints } from "../../utils/pointsData";
+import LoadingScreen from "../Components/LoadingScreen";
+import {addResponse} from "../../utils/AgentResponses"
+import {getResponses} from "../../utils/AgentResponses"
 
 export default function Dashboard() {
   const [inputText, setInputText] = useState("");
   const [jsonObject, setJsonObject] = useState({});
   const [showPopup, setShowPopup] = useState(false);
   const [show, setShow] = useState(false);
+  const [loading , setLoading] = useState(false);
   const [point, setPoint] = useState(0);
   const [agentData, setAgentData] = useState({
     high: 0,
@@ -20,6 +24,9 @@ export default function Dashboard() {
     low: 0,
   });
   const [sentimentScore, setSentimentScore] = useState(0);
+
+  const allResponses = getResponses();
+
 
   const calculateAgents = (score) => {
     setSentimentScore((prev) => prev + score);
@@ -43,6 +50,7 @@ export default function Dashboard() {
   };
 
   const handleSubmit = () => {
+    setLoading(true);
     fetch("http://127.0.0.1:8000/api/submitIdea", {
       method: "POST",
       headers: {
@@ -60,6 +68,7 @@ export default function Dashboard() {
         setShowPopup(true);
 
         // Add new globe point
+        addResponse(data.message);
         addPoints({
           lat: Number(data.message.latitude || 0),
           lng: Number(data.message.longitude || 0),
@@ -70,8 +79,9 @@ export default function Dashboard() {
         if (data.message.sentimentScore !== undefined) {
           calculateAgents(Number(data.message.sentimentScore));
         }
-
-        console.log("Updated Sentiment:", sentimentScore, "Points:", point);
+        setLoading(false);
+        const allResponses = getResponses();
+        console.log(allResponses);
       })
       .catch((err) => console.error("Error:", err));
   };
@@ -80,6 +90,9 @@ export default function Dashboard() {
     <div className="h-screen relative font-mono bg-black text-white flex">
       {/* Left Sidebar */}
       <LeftSideBar />
+      {loading && <LoadingScreen isloading={loading} onClose={() => {
+              setLoading(false);
+            }}/>}
 
       {/* Center Globe Section */}
       <main className="flex-1 flex z-0 flex-col relative items-center justify-center">
@@ -108,19 +121,19 @@ export default function Dashboard() {
         </div>
 
         {/* Input Box */}
-        <div className="absolute z-10 bottom-8 w-2/3 bg-neutral-900 border border-neutral-800 p-3 flex items-center justify-between rounded">
+        <div className="absolute z-10 bottom-8 w-3/4 bg-neutral-800 shadow-xl shadow-white/20 border border-neutral-800 p-3 flex items-center justify-between rounded-full">
           <input
             type="text"
-            className="bg-transparent outline-none flex-1 text-sm"
+            className="bg-transparent py-5 px-5 outline-none flex-1 text-sm"
             placeholder="Describe your idea ..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
           />
           <button
             onClick={handleSubmit}
-            className="bg-neutral-800 px-3 py-1 rounded text-sm hover:bg-neutral-700"
+            className="bg-neutral-700 shadow-lg shadow-white/20 font-9xl ease-in duration-200 active:translate-y-1 active:shadow-neutral-800 rounded-full px-6 py-3.5 text-xl hover:bg-neutral-600"
           >
-            Simulate
+            ↑
           </button>
         </div>
       </main>
@@ -130,7 +143,7 @@ export default function Dashboard() {
         {/* Analysis Input */}
         <div className="border border-neutral-800 min-h-[200px] p-4 rounded">
           <p className="text-blue-400 text-lg mb-2">ANALYSIS INPUT</p>
-          <div className="text-sm bg-gray-900 px-3 py-5 mb-3 overflow-auto h-40 whitespace-pre-wrap">
+          <div className="text-sm bg-gray-900 px-3 py-2 mb-3 overflow-auto h-25 whitespace-pre-wrap">
             {inputText}
           </div>
           <p className="text-xs text-neutral-500">
@@ -152,8 +165,17 @@ export default function Dashboard() {
 
         {/* Feedback List */}
         <div className="border border-neutral-800 p-4 rounded">
-          <p className="text-orange-400 text-lg mb-2">FEEDBACK LIST (0)</p>
-          <p className="text-xs text-neutral-500">No feedback collected yet</p>
+          <p className="text-orange-400 text-lg mb-2">FEEDBACK LIST ({allResponses.length})</p>
+          <p className="text-xs text-neutral-500">
+            {
+              allResponses.forEach((response) => 
+                (
+                  <div className="overflow-auto text-white">
+                    <p className="text-sm mb-1 ">{response.name}</p>
+                  </div>
+                ))
+            }
+          </p>
         </div>
       </aside>
     </div>

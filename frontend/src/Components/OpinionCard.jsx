@@ -34,7 +34,7 @@ const OpinionCard = ({ response , onClose }) => {
         {/* Footer buttons */}
         <div className="flex justify-between mt-6">
           <button className="bg-green-700 hover:bg-green-600 px-4 py-2 rounded text-sm">
-            📞 Call {response.name}
+            <span className="inline-block transform mr-2 -rotate-45">🕻</span> Call {response.name}
           </button>
           <button
             onClick={onClose}
