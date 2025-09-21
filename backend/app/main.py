@@ -3,10 +3,16 @@ from pydantic import BaseModel
 from typing import List, Dict
 from fastapi.middleware.cors import CORSMiddleware
 import random
+import os
+from dotenv import load_dotenv
 from google import genai
 
 app = FastAPI()
-client = genai.Client()
+load_dotenv()
+api_key = os.getenv("API_KEY")
+if not api_key:
+    raise ValueError("GEMINI_API_KEY not found in environment variables")
+client = genai.Client(api_key=api_key)
 
 
 origins = [
