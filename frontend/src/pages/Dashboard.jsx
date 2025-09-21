@@ -1,9 +1,28 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Loader from "../Components/loader";
 import AgentActivity from "../Components/AgentActivity";
 
 export default function Dashboard() {
+    const [inputText,setInputText] = useState("");
+
+    const handleSubmit=()=>{
+    fetch("http://127.0.0.1:8000/api/submitIdea", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        "idea_text": inputText,
+      }),
+    })
+      .then((res) => res.json())   // parse response as JSON
+      .then((data) => {
+        console.log(data.message); // log the actual message
+      })
+      .catch((err) => console.error("Error:", err));
+    }
+
   return (
     <div className="h-screen font-mono bg-black text-white flex">
       {/* Left Sidebar */}
@@ -64,10 +83,12 @@ export default function Dashboard() {
           <input
             type="text"
             className="bg-transparent outline-none flex-1 text-sm"
-            placeholder="i want to create a fintech app for..."
+            placeholder="Describe your idea ..."
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)} // update state
           />
-          <button className="bg-neutral-800 px-3 py-1 rounded text-sm hover:bg-neutral-700">
-            Focus Group
+          <button onClick={()=>handleSubmit()} className="bg-neutral-800 px-3 py-1 rounded text-sm hover:bg-neutral-700">
+            Simulate
           </button>
         </div>
       </main>
@@ -78,7 +99,7 @@ export default function Dashboard() {
         {/* Analysis Input */}
         <div className="border border-neutral-800 min-h-[200px] p-4 rounded">
           <p className="text-blue-400 text-lg mb-2">ANALYSIS INPUT</p>
-          <div className="text-sm bg-gray-900 px-3 py-5 mb-3 overflow-auto h-40 whitespace-pre-wrap">i want   app for the followig </div>
+          <div className="text-sm bg-gray-900 px-3 py-5 mb-3 overflow-auto h-40 whitespace-pre-wrap">{inputText} </div>
           <p className="text-xs text-neutral-500">
             When you’re ready, deploy your idea to the whole world
           </p>

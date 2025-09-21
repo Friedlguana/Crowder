@@ -15,6 +15,16 @@ function App() {
     }, 1000);
   },[])
 
+  useEffect(()=>{
+    fetch("http://127.0.0.1:8000/")
+      .then((res) => res.json())   // parse response as JSON
+      .then((data) => {
+        console.log(data.message); // log the actual message
+      })
+      .catch((err) => console.error("Error:", err));
+
+  },[])
+
   return (
     <BrowserRouter>
       <Routes>

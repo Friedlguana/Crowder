@@ -28,7 +28,7 @@ const LandingPage = () => {
               </div>
           </div>
           <Link to={"/login"}>
-            <a href="#" className="hover:text-gray-300">Login ↗</a>
+            <p className="hover:text-gray-300">Login ↗</p>
           </Link>
       </header>
 

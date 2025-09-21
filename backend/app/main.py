@@ -1,9 +1,24 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict
+from fastapi.middleware.cors import CORSMiddleware
 import random
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",   # React/Next.js local dev
+    "http://localhost:5173",   # Vite local dev
+    "https://your-frontend.com"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,            # Allowed origins
+    allow_credentials=True,
+    allow_methods=["*"],              # Allow all methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],              # Allow all headers
+)
 
 # Root endpoint
 @app.get("/")
