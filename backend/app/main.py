@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from typing import List, Dict
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from groq import Groq
+from google import genai
 from geopy.geocoders import Nominatim
 
 # ----------------------------
@@ -15,14 +15,22 @@ from geopy.geocoders import Nominatim
 app = FastAPI()
 load_dotenv()
 
-# Load API key
-groq_api_key = os.getenv("GROQ_API_KEY")
+# Load Gemini API keys
+gemini_api_keys = [
+    os.getenv("GEMINI_API_KEY_1"),
+    os.getenv("GEMINI_API_KEY_2"),
+    os.getenv("GEMINI_API_KEY_3"),
+    os.getenv("GEMINI_API_KEY_4"),
+    os.getenv("GEMINI_API_KEY_5"),
+    os.getenv("GEMINI_API_KEY_6"),
+]
 
-if not groq_api_key:
-    raise ValueError("GROQ_API_KEY not found in environment variables")
+if not all(gemini_api_keys):
+    raise ValueError("One or more GEMINI_API_KEY_X are missing in environment variables")
 
-# Client
-groq_client = Groq(api_key=groq_api_key)
+# Create clients for each API key
+gemini_clients = [genai.Client(api_key=key) for key in gemini_api_keys]
+current_key_index = 0
 
 # CORS
 origins = [
@@ -37,6 +45,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+#function for safe json parsing
+import re
+
+def safe_json_load(text: str):
+    # Remove wrapping quotes if needed
+    text = text.strip()
+    if text.startswith('"') and text.endswith('"'):
+        text = text[1:-1].replace('\\"', '"')
+    # Extract first JSON object
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if match:
+        return json.loads(match.group())
+    raise ValueError("No JSON found")
+
 
 # ----------------------------
 # Pydantic models
@@ -60,15 +83,6 @@ ideas_db = {}
 feedback_db = {}
 idea_counter = 1
 
-# ----------------------------
-# Groq Models (cycle list)
-# ----------------------------
-groq_models = [
-    "llama-3.1-70b-versatile",
-    "mixtral-8x7b-32768"
-]
-current_model_index = 0
-
 @app.get("/")
 async def connectionCheck():
     return "Connection Successful"
@@ -77,27 +91,29 @@ async def connectionCheck():
 # Utility function: LLM handler
 # ----------------------------
 def generate_llm_response(prompt: str):
-    global current_model_index
+    """Cycle through multiple Gemini API keys if rate-limited"""
+    global current_key_index
 
     attempts = 0
-    while attempts < len(groq_models):
-        model = groq_models[current_model_index]
+    while attempts < len(gemini_clients):
+        client = gemini_clients[current_key_index]
         try:
-            response = groq_client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}]
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
             )
-            return response.choices[0].message.content, model
+            return response.text, f"gemini_key_{current_key_index+1}"
+
         except Exception as e:
-            if "429" in str(e) or "rate limit" in str(e).lower():
-                # Switch to next model
-                current_model_index = (current_model_index + 1) % len(groq_models)
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                # Switch to next API key
+                current_key_index = (current_key_index + 1) % len(gemini_clients)
                 attempts += 1
                 continue
             else:
-                raise HTTPException(status_code=500, detail=f"Groq error ({model}): {e}")
+                raise HTTPException(status_code=500, detail=f"Gemini error ({current_key_index+1}): {e}")
 
-    raise HTTPException(status_code=500, detail="All Groq models failed due to rate limits")
+    raise HTTPException(status_code=500, detail="All Gemini API keys exhausted due to RPM limits")
 
 # ----------------------------
 # 1. Idea Submission
@@ -125,7 +141,7 @@ async def idea_submission(submission: IdeaSubmission):
     feedback_db[idea_id] = feedback_list
 
     # Prepare prompt
-    prompt = f"""You are (name), who is a (jobTitle) living in (city), (country). 
+    prompt = f'''You are (name), who is a (jobTitle) living in (city), (country). 
 You are (age) years old and a (gender). Review the following idea honestly.
 Factor in the demographic that is provided to you while giving your opinion.
 If the idea is bad or not good enough, it must be stated along with the reason.
@@ -133,8 +149,12 @@ If the idea is good or resonates with you, you should also state accordingly why
 The review shouldn't be more than 3 sentences.
 Do not provide anything else but the output format that is requested.
 Randomly generate the demographic details.
-Do not only choose main cities, but that does not mean you do not choose only un-main cities either.
+If the idea already exists or is implemented, the review must acknowledge it and be 
+honest if the idea is going to pan out or no
 
+Idea: {submission.idea_text}
+
+Output Format:
 {{
   "review": "string",
   "name": "string",
@@ -144,20 +164,18 @@ Do not only choose main cities, but that does not mean you do not choose only un
   "country": "string",
   "age": int,
   "gender": "string",
-  "sentimentScore": "float"
+  "sentimentScore": "float"(out of 100)
 }}
+'''
 
-Idea: {submission.idea_text}
-"""
-
-    # Call LLM with model cycling
-    llm_output, model_used = generate_llm_response(prompt)
+    # Call LLM with key cycling
+    llm_output, key_used = generate_llm_response(prompt)
 
     # Parse LLM output
     try:
-        response_data = json.loads(llm_output)
+        response_data = safe_json_load(llm_output)
     except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail=f"Failed to parse {model_used} response")
+        raise HTTPException(status_code=500, detail=f"Failed to parse {key_used} response")
 
     # Geocode
     geolocator = Nominatim(user_agent="geoapi")
@@ -171,4 +189,4 @@ Idea: {submission.idea_text}
         response_data["latitude"] = None
         response_data["longitude"] = None
 
-    return {"status": "success", "idea_id": idea_id, "provider": model_used, "message": response_data}
+    return {"status": "success", "idea_id": idea_id, "provider": key_used, "message": response_data}
