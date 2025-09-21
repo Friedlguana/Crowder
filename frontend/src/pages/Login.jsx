@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const Login = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white relative">
+    <div className="min-h-screen font-mono flex items-center justify-center bg-black text-white relative">
       {/* Background overlay (tunnel effect placeholder) */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-[400px] h-[400px] rounded-full bg-gradient-to-b from-gray-900 to-black opacity-40 blur-3xl"></div>
@@ -48,9 +48,11 @@ const Login = () => {
         </div>
 
         {/* Login button */}
-        <button className="w-full bg-white text-black font-medium py-2 rounded-md hover:bg-gray-200">
-          Login
-        </button>
+        <Link to={"/projects"}>
+          <button className="w-full bg-white text-black font-medium py-2 rounded-md hover:bg-gray-200">
+            Login
+          </button>
+        </Link>
 
         {/* Footer */}
         <div className="mt-4 text-center text-xs text-gray-400">

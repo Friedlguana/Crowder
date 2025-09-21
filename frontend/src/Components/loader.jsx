@@ -55,7 +55,7 @@ const Loader = ({ isLoading = false, isStatic = false, percentage = 0 }) => {
   return (
     <div className="w-full flex flex-col items-center gap-2">
       {/* Percentage */}
-      <div className="text-white font-semibold">{progress}%</div>
+      <div className="text-white mr-auto font-semibold">{progress}%</div>
 
       {/* Loader Bars */}
       <div className="w-full flex justify-center gap-[3px] h-8 items-end">

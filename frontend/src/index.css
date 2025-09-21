@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+
+/* Dark minimal scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a; /* very dark background */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #444; /* medium gray */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #666; /* lighter on hover */
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #444 #0a0a0a;
+}

@@ -4,6 +4,8 @@ import LandingPage from './pages/Home'
 import Signup from './pages/signup';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import Login from './pages/Login';
+import Projects from './pages/Projects';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   const [loading, isLoading] = useState(true)
@@ -19,6 +21,8 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/projects" element={<Projects />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>
     // <>

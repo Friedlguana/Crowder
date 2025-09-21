@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const Signup = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white relative">
+    <div className="min-h-screen font-mono flex items-center justify-center bg-black text-white relative">
         
       {/* Background overlay (tunnel effect placeholder) */}
       <div className="absolute inset-0 flex items-center justify-center">
