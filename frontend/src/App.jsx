@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Loader from './Components/loader'
 import LandingPage from './pages/Home'
-import Signup from './pages/signup';
+import Signup from './pages/Signup';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import Login from './pages/Login';
 import Projects from './pages/Projects';
