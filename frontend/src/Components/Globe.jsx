@@ -2,9 +2,15 @@ import React, { useEffect, useRef } from "react";
 import Globe from "globe.gl";
 import { MeshLambertMaterial, DoubleSide } from "three";
 import * as topojson from "topojson-client";
+import { getPoints } from "../../utils/pointsData";
 
-export default function GlobeViz() {
+const pointsData = getPoints();
+
+
+export default function GlobeViz({newpoint}) {
   const globeRef = useRef(null);
+
+  
 
   useEffect(() => {
     if (!globeRef.current) return;
@@ -29,12 +35,20 @@ export default function GlobeViz() {
         world
           .polygonsData(topojson.feature(landTopo, landTopo.objects.land).features)
           .polygonCapMaterial(
-            new MeshLambertMaterial({ color: "rgba(57, 58, 63 ,0.8)", side: DoubleSide })
+            new MeshLambertMaterial({ color: "rgba(57, 58, 63 )", side: DoubleSide })
           )
           .polygonSideColor(() => "lightgray")
       });
+
+      world
+      .pointsData(pointsData)
+      .pointLat("lat")
+      .pointLng("lng")
+      .pointAltitude(0.013) // slight altitude
+      .pointColor(() => "rgba(242, 46, 147, 1)")
+      .pointRadius("size");
       
-  }, []);
+  }, [newpoint]);
 
   return <div className="overflow-hidden" ref={globeRef} style={{ width: "100%", height: "80vh" }} />;
 }

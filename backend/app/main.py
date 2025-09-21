@@ -52,7 +52,7 @@ idea_counter = 1
 
 @app.get("/")
 async def connectionCheck():
-    return "Connection Successful"
+    return {"message":"Connection Successful"}
 
 # ----------------------------
 # 1. Idea Submission
@@ -129,6 +129,8 @@ Output Format example:
     else:
         response_data["latitude"] = None
         response_data["longitude"] = None
+
+    print(response_data)
 
     return {"status": "success", "idea_id": idea_id, "message": response_data}
 
