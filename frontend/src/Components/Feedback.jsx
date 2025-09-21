@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import OpinionCard from "./OpinionCard";
 
 const data = [
   {
@@ -28,9 +29,15 @@ const data = [
 ];
 
 const CustomersTestimoniesGrid = ({ onClose , response }) => {
+
+    const [show, setShow] = React.useState(false);
+    const [current,setCurrent] = useState({})
   return (<>
     {response.length > 0 ? <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Blurred Background Overlay */}
+
+      
+      
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-md"
         onClick={onClose} // clicking background closes popup
@@ -51,33 +58,37 @@ const CustomersTestimoniesGrid = ({ onClose , response }) => {
           </p>
         </div>
 
+        {show && (
+                    <OpinionCard
+                        response={current}
+                        onClose={() => {
+                        setShow(false);
+                        }}
+                    />
+                    )}
+
         {/* Grid */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
           {response.map((person, i) => (
-            <a
+            <div
               key={i}
-              href={"person.link"}
+            onClick={() => {setCurrent(person);setShow(true)}}
               target="_blank"
               rel="noopener noreferrer"
               className="group relative block rounded-xl border border-neutral-800 bg-neutral-900 p-6 shadow-lg hover:shadow-green-500/20 transition duration-300"
             >
               <div className="flex items-center space-x-4">
-                <img
-                  src={person.img}
-                  className="w-12 h-12 rounded-full border border-neutral-700"
-                  alt={person.name}
-                />
                 <div>
                   <h3 className="text-lg font-semibold text-white">
                     {person.name}
                   </h3>
-                  <p className="text-sm text-neutral-400">{"person.role"}</p>
+                  <p className="text-sm text-neutral-400">{person.jobTitle}</p>
                 </div>
               </div>
               <p className="mt-4 text-neutral-500/80 text-sm leading-relaxed">
-                {person.quote}
+                {person.review}
               </p>
-            </a>
+            </div>
           ))}
         </div>
 

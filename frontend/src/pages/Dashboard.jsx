@@ -1,24 +1,23 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import AgentActivity from "../Components/AgentActivity";
-import PredictedSuccessRate from "../Components/PredictedSuccessRate";
 import LeftSideBar from "../Components/LeftSideBar";
 import GlobeComponent from "../Components/Globe";
 import OpinionPopUp from "../Components/opinionPopUp";
 import OpinionCard from "../Components/OpinionCard";
-import { addPoints } from "../../utils/pointsData";
+import AgentActivity from "../Components/AgentActivity";
+import PredictedSuccessRate from "../Components/PredictedSuccessRate";
+import CustomersTestimoniesGrid from "../Components/Feedback";
 import LoadingScreen from "../Components/LoadingScreen";
-import {addResponse} from "../../utils/AgentResponses";
-import {getResponses} from "../../utils/AgentResponses";
-import CustomersTestimoniesGrid from '../Components/Feedback';
+
+import { addPoints } from "../../utils/pointsData";
+import { addResponse, getResponses } from "../../utils/AgentResponses";
 
 export default function Dashboard() {
   const [inputText, setInputText] = useState("");
   const [jsonObject, setJsonObject] = useState({});
   const [showPopup, setShowPopup] = useState(false);
   const [show, setShow] = useState(false);
-  const [loading , setLoading] = useState(false);
-  const [showFeedback,setShowFeedback] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [point, setPoint] = useState(0);
   const [agentData, setAgentData] = useState({
     high: 0,
@@ -26,39 +25,28 @@ export default function Dashboard() {
     low: 0,
   });
   const [sentimentScore, setSentimentScore] = useState(0);
-  let allResponses = [] ;
+  const [allResponses, setAllResponses] = useState([]); // ✅ useState instead of plain var
 
   const calculateAgents = (score) => {
     setSentimentScore((prev) => prev + score);
 
     if (score < 33) {
-      setAgentData((prev) => ({
-        ...prev,
-        low: prev.low + 1,
-      }));
+      setAgentData((prev) => ({ ...prev, low: prev.low + 1 }));
     } else if (score < 66) {
-      setAgentData((prev) => ({
-        ...prev,
-        medium: prev.medium + 1,
-      }));
+      setAgentData((prev) => ({ ...prev, medium: prev.medium + 1 }));
     } else {
-      setAgentData((prev) => ({
-        ...prev,
-        high: prev.high + 1,
-      }));
+      setAgentData((prev) => ({ ...prev, high: prev.high + 1 }));
     }
   };
 
   const handleSubmit = () => {
+    if (!inputText.trim()) return; // prevent empty submit
+
     setLoading(true);
     fetch("http://127.0.0.1:8000/api/submitIdea", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        idea_text: inputText,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea_text: inputText }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -67,7 +55,7 @@ export default function Dashboard() {
         setPoint((prev) => prev + 1);
         setShowPopup(true);
 
-        // Add new globe point
+        // Add response + globe point
         addResponse(data.message);
         addPoints({
           lat: Number(data.message.latitude || 0),
@@ -75,15 +63,20 @@ export default function Dashboard() {
           size: 1,
         });
 
-        // Update agents
+        // Update agent distribution
         if (data.message.sentimentScore !== undefined) {
           calculateAgents(Number(data.message.sentimentScore));
         }
+
+        // Refresh response list
+        setAllResponses(getResponses());
+
         setLoading(false);
-        allResponses = getResponses();
-        console.log(allResponses);
       })
-      .catch((err) => console.error("Error:", err));
+      .catch((err) => {
+        console.error("Error:", err);
+        setLoading(false);
+      });
   };
 
   return (
@@ -132,14 +125,20 @@ export default function Dashboard() {
             placeholder="Describe your idea ..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSubmit();
+              }
+            }}
           />
           <button
             onClick={handleSubmit}
-            className="bg-neutral-700 shadow-lg shadow-white/20 font-9xl ease-in duration-200 active:translate-y-1 active:shadow-neutral-800 rounded-full px-6 py-3.5 text-xl hover:bg-neutral-600"
+            className="bg-neutral-700 shadow-lg shadow-white/20 ease-in duration-200 active:translate-y-1 active:shadow-neutral-800 rounded-full px-6 py-3.5 text-xl hover:bg-neutral-600"
           >
             ↑
           </button>
         </div>
+
       </main>
 
       {/* Right Sidebar */}
