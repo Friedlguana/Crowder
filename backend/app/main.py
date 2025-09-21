@@ -50,7 +50,7 @@ ideas_db = {}
 feedback_db = {}
 idea_counter = 1
 
-@app.post("/")
+@app.get("/")
 async def connectionCheck():
     return "Connection Successful"
 
