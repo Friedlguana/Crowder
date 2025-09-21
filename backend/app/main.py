@@ -3,8 +3,11 @@ from pydantic import BaseModel
 from typing import List, Dict
 from fastapi.middleware.cors import CORSMiddleware
 import random
+from google import genai
 
 app = FastAPI()
+client = genai.Client()
+
 
 origins = [
     "http://localhost:3000",   # React/Next.js local dev
@@ -79,10 +82,34 @@ async def idea_submission(submission: IdeaSubmission):
             response_message=f"Persona {pid} simulated response for idea '{submission.idea_text}'."
         )
         feedback_list.append(persona)
-    
-    feedback_db[idea_id] = feedback_list
+    prompt = f'''You are (name), who is a (jobTitle) living in (city), (country). Your are (age) years old and
+you are a (gender). I need you to give an honest review for the following Idea.
+Factor in the demographic that is provided to you while giving your opinion. If the idea
+is bad or not good enough, it must be stated along with the reason. If the idea is good or
+resonates with you, you should also state accordingly why. The review shouldn't be more than 3 sentences.
+Do not provide anything else but the output format that is requested.
+Randomly generate the demographic details.
 
-    return {"status": "success", "idea_id": idea_id, "message": "Idea submitted successfully. Feedback generated."}
+Idea: {submission.idea_text}
+
+Output Format example:
+
+{{
+  "review": "abc",
+  "name": "John Doe",
+  "jobTitle": "Software Engineer",
+  "city": "Toronto",
+  "country": "Canada",
+  "age": 29,
+  "gender": "Male"
+}}'''
+    feedback_db[idea_id] = feedback_list
+    response = client.models.generate_content(
+    model="gemini-2.5-flash",
+    contents=prompt,
+)
+
+    return {"status": "success", "idea_id": idea_id, "message": response}
 
 # ----------------------------
 # 2. Get Feedback
