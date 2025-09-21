@@ -18,14 +18,8 @@ const LandingPage = () => {
             <div className="flex py-4 px-8 rounded-md bg-gray-900 space-x-8">
               <a href="#" className="hover:text-gray-300">Home</a>
               <a href="#" className="hover:text-gray-300">About</a>
-              <a href="#" className="hover:text-gray-300">Pricing</a>
-              <div className="relative group">
-                <button className="hover:text-gray-300">Discovery ▾</button>
-                <div className="absolute hidden group-enabled:block bg-black text-sm mt-2 rounded shadow-lg p-2">
-                  <a href="#" className="block px-3 py-1 hover:bg-gray-800">Option 1</a>
-                  <a href="#" className="block px-3 py-1 hover:bg-gray-800">Option 2</a>
-                </div>
-              </div>
+              <a href="#" className="hover:text-gray-300">Team</a>
+              <a href="#" className="hover:text-gray-300">Contact Us</a>
           </div>
           <Link to={"/login"}>
             <p className="hover:text-gray-300">Login ↗</p>

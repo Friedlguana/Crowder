@@ -8,8 +8,9 @@ import OpinionPopUp from "../Components/opinionPopUp";
 import OpinionCard from "../Components/OpinionCard";
 import { addPoints } from "../../utils/pointsData";
 import LoadingScreen from "../Components/LoadingScreen";
-import {addResponse} from "../../utils/AgentResponses"
-import {getResponses} from "../../utils/AgentResponses"
+import {addResponse} from "../../utils/AgentResponses";
+import {getResponses} from "../../utils/AgentResponses";
+import CustomersTestimoniesGrid from '../Components/Feedback';
 
 export default function Dashboard() {
   const [inputText, setInputText] = useState("");
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const [showPopup, setShowPopup] = useState(false);
   const [show, setShow] = useState(false);
   const [loading , setLoading] = useState(false);
+  const [showFeedback,setShowFeedback] = useState(false)
   const [point, setPoint] = useState(0);
   const [agentData, setAgentData] = useState({
     high: 0,
@@ -24,9 +26,7 @@ export default function Dashboard() {
     low: 0,
   });
   const [sentimentScore, setSentimentScore] = useState(0);
-
-  const allResponses = getResponses();
-
+  let allResponses = [] ;
 
   const calculateAgents = (score) => {
     setSentimentScore((prev) => prev + score);
@@ -80,7 +80,7 @@ export default function Dashboard() {
           calculateAgents(Number(data.message.sentimentScore));
         }
         setLoading(false);
-        const allResponses = getResponses();
+        allResponses = getResponses();
         console.log(allResponses);
       })
       .catch((err) => console.error("Error:", err));
@@ -92,7 +92,11 @@ export default function Dashboard() {
       <LeftSideBar />
       {loading && <LoadingScreen isloading={loading} onClose={() => {
               setLoading(false);
-            }}/>}
+      }}/>}
+            {showFeedback && <CustomersTestimoniesGrid
+            response ={allResponses}
+            onClose={() => setShowFeedback(false)}
+            />}
 
       {/* Center Globe Section */}
       <main className="flex-1 flex z-0 flex-col relative items-center justify-center">
@@ -166,15 +170,8 @@ export default function Dashboard() {
         {/* Feedback List */}
         <div className="border border-neutral-800 p-4 rounded">
           <p className="text-orange-400 text-lg mb-2">FEEDBACK LIST ({allResponses.length})</p>
-          <p className="text-xs text-neutral-500">
-            {
-              allResponses.forEach((response) => 
-                (
-                  <div className="overflow-auto text-white">
-                    <p className="text-sm mb-1 ">{response.name}</p>
-                  </div>
-                ))
-            }
+          <p onClick={() => setShowFeedback(true)} className="text-xs cursor-pointer text-neutral-500">
+            See All Responses ➚
           </p>
         </div>
       </aside>

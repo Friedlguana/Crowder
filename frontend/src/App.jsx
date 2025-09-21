@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import Loader from './Components/loader'
 import LandingPage from './pages/Home'
 import Signup from './pages/Signup';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
@@ -7,13 +6,8 @@ import Login from './pages/Login';
 import Projects from './pages/Projects';
 import Dashboard from './pages/Dashboard';
 
+
 function App() {
-  const [loading, isLoading] = useState(true)
-  useEffect(()=>{
-    setTimeout(() => {
-      isLoading(false)
-    }, 1000);
-  },[])
 
   useEffect(()=>{
     fetch("http://127.0.0.1:8000/")

@@ -45,7 +45,7 @@ export default function GlobeViz({newpoint}) {
       .pointLat("lat")
       .pointLng("lng")
       .pointAltitude(0.013) // slight altitude
-      .pointColor(() => "rgba(242, 46, 147, 1)")
+      .pointColor(() => "white")
       .pointRadius("size");
       
   }, [newpoint]);
