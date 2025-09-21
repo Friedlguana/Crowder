@@ -46,9 +46,11 @@ const LandingPage = () => {
           Get a market analysis in minutes, not months.
         </p>
 
-        <button className="mt-8 bg-white text-black px-6 py-3 rounded font-semibold hover:bg-gray-200 transition">
-          Explore Crowder ↗
-        </button>
+        <Link to={"/dashboard"}>
+          <button className="mt-8 bg-white text-black px-6 py-3 rounded font-semibold hover:bg-gray-200 transition">
+            Explore Crowder ↗
+          </button>
+        </Link>
       </main>
     </div>
   );
