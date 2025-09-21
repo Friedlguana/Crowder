@@ -1,3 +1,4 @@
+import json
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict
@@ -6,6 +7,7 @@ import random
 import os
 from dotenv import load_dotenv
 from google import genai
+from geopy.geocoders import Nominatim
 
 app = FastAPI()
 load_dotenv()
@@ -14,25 +16,19 @@ if not api_key:
     raise ValueError("GEMINI_API_KEY not found in environment variables")
 client = genai.Client(api_key=api_key)
 
-
 origins = [
-    "http://localhost:3000",   # React/Next.js local dev
-    "http://localhost:5173",   # Vite local dev
+    "http://localhost:3000",
+    "http://localhost:5173",
     "https://your-frontend.com"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,            # Allowed origins
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],              # Allow all methods (GET, POST, PUT, DELETE, etc.)
-    allow_headers=["*"],              # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-
-# Root endpoint
-@app.get("/")
-def read_root():
-    return {"message": "Crowder backend running"}
 
 # ----------------------------
 # Pydantic models
@@ -49,20 +45,9 @@ class PersonaFeedback(BaseModel):
     persona_profile: PersonaProfile
     response_message: str
 
-class FeedbackResponse(BaseModel):
-    idea_id: int
-    feedback: List[PersonaFeedback]
-
-class DashboardResponse(BaseModel):
-    idea_id: int
-    summary_message: str
-    persona_distribution: Dict[str, Dict[str, int]]
-
-# ----------------------------
-# In-memory storage (for MVP)
-# ----------------------------
-ideas_db = {}       # idea_id: idea_text
-feedback_db = {}    # idea_id: list of PersonaFeedback
+# In-memory storage
+ideas_db = {}
+feedback_db = {}
 idea_counter = 1
 
 # ----------------------------
@@ -76,7 +61,7 @@ async def idea_submission(submission: IdeaSubmission):
     idea_counter += 1
 
     # Simulate AI feedback generation with variable number of personas
-    num_personas = random.randint(2, 5)  # example: 2-5 personas
+    num_personas = random.randint(2, 5)
     feedback_list = []
     for pid in range(1, num_personas + 1):
         persona = PersonaFeedback(
@@ -88,6 +73,10 @@ async def idea_submission(submission: IdeaSubmission):
             response_message=f"Persona {pid} simulated response for idea '{submission.idea_text}'."
         )
         feedback_list.append(persona)
+
+    feedback_db[idea_id] = feedback_list
+
+    # Prepare Gemini prompt
     prompt = f'''You are (name), who is a (jobTitle) living in (city), (country). Your are (age) years old and
 you are a (gender). I need you to give an honest review for the following Idea.
 Factor in the demographic that is provided to you while giving your opinion. If the idea
@@ -109,13 +98,34 @@ Output Format example:
   "age": 29,
   "gender": "Male"
 }}'''
-    feedback_db[idea_id] = feedback_list
-    response = client.models.generate_content(
-    model="gemini-2.5-flash",
-    contents=prompt,
-)
 
-    return {"status": "success", "idea_id": idea_id, "message": response}
+    # Call Gemini API
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
+
+    # Parse the JSON string returned by Gemini
+    try:
+        response_data = json.loads(response.text)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="Failed to parse Gemini API response")
+
+    # Geocode the city and country
+    geolocator = Nominatim(user_agent="geoapi")
+    city = response_data.get("city")
+    country = response_data.get("country")
+    location = geolocator.geocode(f"{city}, {country}")
+
+    if location:
+        response_data["latitude"] = location.latitude
+        response_data["longitude"] = location.longitude
+    else:
+        response_data["latitude"] = None
+        response_data["longitude"] = None
+
+    return {"status": "success", "idea_id": idea_id, "message": response_data}
+
 
 # ----------------------------
 # 2. Get Feedback
