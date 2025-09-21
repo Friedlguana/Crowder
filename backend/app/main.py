@@ -50,6 +50,10 @@ ideas_db = {}
 feedback_db = {}
 idea_counter = 1
 
+@app.post("/")
+async def connectionCheck():
+    return "Connection Successful"
+
 # ----------------------------
 # 1. Idea Submission
 # ----------------------------
@@ -93,10 +97,12 @@ Output Format example:
   "review": "abc",
   "name": "John Doe",
   "jobTitle": "Software Engineer",
+  "jobIndustry": "Defense",
   "city": "Toronto",
   "country": "Canada",
   "age": 29,
-  "gender": "Male"
+  "gender": "Male",
+  "sentimentScore": "35.4"
 }}'''
 
     # Call Gemini API
