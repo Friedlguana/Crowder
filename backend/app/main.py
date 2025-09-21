@@ -144,13 +144,13 @@ async def idea_submission(submission: IdeaSubmission):
     prompt = f'''You are (name), who is a (jobTitle) living in (city), (country). 
 You are (age) years old and a (gender). Review the following idea honestly.
 Factor in the demographic that is provided to you while giving your opinion.
+If the idea already exists or is implemented, the review must acknowledge it and be 
+honest if the idea is going to pan out or no.
 If the idea is bad or not good enough, it must be stated along with the reason.
 If the idea is good or resonates with you, you should also state accordingly why.
 The review shouldn't be more than 3 sentences.
 Do not provide anything else but the output format that is requested.
 Randomly generate the demographic details.
-If the idea already exists or is implemented, the review must acknowledge it and be 
-honest if the idea is going to pan out or no
 
 Idea: {submission.idea_text}
 
