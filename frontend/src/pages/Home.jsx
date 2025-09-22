@@ -1,8 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
+import Footer from "../Components/Footer";
+
+
+
 const LandingPage = () => {
   return (
+    <>
     <div className="relative min-h-screen w-full bg-black text-white font-mono overflow-hidden">
       {/* Background Crowd */}
       <div className="absolute inset-0 flex items-center justify-center">
@@ -15,19 +20,19 @@ const LandingPage = () => {
           <div className="w-6 h-6 bg-white rounded-sm" /> {/* Logo placeholder */}
           <span className="font-bold tracking-wider">Crowder</span>
         </div>
-            <div className="flex py-4 px-8 rounded-md bg-gray-900 space-x-8">
-              <a href="#" className="hover:text-gray-300">Home</a>
-              <a href="#" className="hover:text-gray-300">About</a>
-              <a href="#" className="hover:text-gray-300">Team</a>
-              <a href="#" className="hover:text-gray-300">Contact Us</a>
-          </div>
-          <Link to={"/login"}>
-            <p className="hover:text-gray-300">Login ↗</p>
-          </Link>
+        <div className="flex py-4 px-8 rounded-md bg-gray-900 space-x-8">
+          <a href="#" className="hover:text-gray-300">Home</a>
+          <a href="#" className="hover:text-gray-300">About</a>
+          <a href="#" className="hover:text-gray-300">Team</a>
+          <a href="#" className="hover:text-gray-300">Contact Us</a>
+        </div>
+        <Link to={"/login"}>
+          <p className="hover:text-gray-300">Login ↗</p>
+        </Link>
       </header>
 
       {/* Hero Section */}
-      <main className="relative z-10 flex flex-col items-center justify-center text-center px-6 mt-24">
+      <main className="relative z-10 flex flex-col items-center justify-center text-center px-6 mt-30 mb-30">
         <div className="text-xs uppercase tracking-wider bg-gray-900 px-4 py-1 rounded-full mb-6">
           Latest update &nbsp; Cloudflare Workers AI Support Is Here! ↗
         </div>
@@ -46,7 +51,30 @@ const LandingPage = () => {
           </button>
         </Link>
       </main>
+
+      {/* Image Grid Section */}
+      <section className="relative z-10 grid grid-cols-2 gap-6 px-8 py-16 max-w-6xl mx-auto">
+        {/* Dashboard image spans 2 rows + 2 columns */}
+        <div className="col-span-2 border-1 row-span-2 relative group rounded-xl overflow-hidden">
+          <img src="dashboard.png" alt="dashboard" className="w-full h-full object-cover rounded-xl" />
+          <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:animate-glow" />
+        </div>
+
+        {/* Response image */}
+        <div className="relative border-1 group rounded-xl overflow-hidden">
+          <img src="response.png" alt="response" className="w-full h-full object-cover rounded-xl" />
+          <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:animate-glow" />
+        </div>
+
+        {/* Feedback image */}
+        <div className="relative border-1 group rounded-xl overflow-hidden">
+          <img src="feedback.png" alt="feedback" className="w-full h-full object-cover rounded-xl" />
+          <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:animate-glow" />
+        </div>
+      </section>
+      
     </div>
+    <Footer /></>
   );
 };
 
