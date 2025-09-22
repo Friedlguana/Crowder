@@ -30,9 +30,9 @@ export default function Dashboard() {
   const [sentimentScore, setSentimentScore] = useState(0);
   const [allResponses, setAllResponses] = useState([]); // ✅ useState instead of plain var
   const [number,setNumber] = useState(1);
-  const [age,setAge] = useState(null);
-  const [region,setRegion] = useState(null);
-  const [industry,setIndustry] = useState(null);
+  const [age,setAge] = useState("");
+  const [region,setRegion] = useState("");
+  const [industry,setIndustry] = useState("");
 
 
 const handleSubmit = () => {
