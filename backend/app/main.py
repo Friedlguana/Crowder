@@ -1,7 +1,7 @@
 import json
 import os
 import random
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Header
 from pydantic import BaseModel
 from typing import List, Dict
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +12,8 @@ import firebase_admin
 from firebase_admin import credentials, firestore, auth
 import jwt
 import datetime
+from fastapi import Body, Path
+import traceback
 
 
 # ----------------------------
@@ -19,7 +21,7 @@ import datetime
 # ----------------------------
 app = FastAPI()
 load_dotenv()
-cred = credentials.Certificate("backend/app/crowder-e26dc-firebase-adminsdk-fbsvc-111b4a2222.json")
+cred = credentials.Certificate("./crowder-e26dc-firebase-adminsdk-fbsvc-111b4a2222.json")
 firebase_admin.initialize_app(cred)
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
@@ -214,23 +216,175 @@ Output Format:
 # ----------------------------
 # 2. Get user details
 # ----------------------------
-@app.post("/get_user/{uid}")
-def get_user(uid: str):
+def verify_token(authorization: str = Header(...)):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+    
+    id_token = authorization.split("Bearer ")[1]
     try:
-        # Get user from Firebase Auth
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token["uid"]
         user = auth.get_user(uid)
+        return user
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
 
-        # Optionally, also fetch extra profile info from Firestore
-        user_ref = db.collection("users").document(uid).get()
-        user_data = user_ref.to_dict() if user_ref.exists else {}
+@app.get("/get_user")
+def get_user(user=Depends(verify_token)):
+    return {
+        "uid": user.uid,
+        "email": user.email,
+        "display_name": user.display_name,
+        "phone_number": user.phone_number,
+        "custom_claims": user.custom_claims,
+    }
+
+
+# -------------------------------
+# Data Model for Project
+# -------------------------------
+class Project(BaseModel):
+    project_name: str | None = None
+    project_description: str | None = None
+    avg_sim_perc: float | None = None
+    no_sim: int | None = None
+    sim_response: list[dict] = []
+
+@app.post("/projects/new")
+def create_project(uid: str = Depends(verify_token)):
+    try:
+        project_data = {
+            "uid": uid,  # link to user
+            "project_name": "",
+            "project_description": "",
+            "avg_sim_perc": None,
+            "no_sim": None,
+            "sim_response": [],
+            "created_date": datetime.utcnow().isoformat()
+        }
+
+        # Add to Firestore (auto-generate doc id)
+        doc_ref = db.collection("projects").add(project_data)
 
         return {
-            "uid": user.uid,
-            "email": user.email,
-            "display_name": user.display_name,
-            "phone_number": user.phone_number,
-            "custom_claims": user.custom_claims,
-            "profile": user_data  # Extra data from Firestore
+            "message": "Project created successfully",
+            "project_id": doc_ref[1].id,
+            "project": project_data
         }
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+    
+# -------------------------------
+# Update Project
+# -------------------------------
+
+# example frontend call
+
+# const session = await getSession();
+
+# await fetch(`http://127.0.0.1:8000/projects/${projectId}`, {
+#   method: "PATCH",
+#   headers: {
+#     "Authorization": `Bearer ${session.token}`,
+#     "Content-Type": "application/json"
+#   },
+#   body: JSON.stringify({
+#     field_to_update: "project_name",
+#     data: "Crowder Simulation Project"
+#   })
+# });
+
+@app.patch("/projects/{project_id}")
+def update_project(
+    project_id: str = Path(...),
+    payload: dict = Body(...),
+    uid: str = Depends(verify_token)
+):
+    try:
+        field = payload.get("field_to_update")
+        data = payload.get("data")
+
+        if not field:
+            raise HTTPException(status_code=400, detail="field_to_update is required")
+
+        # Get the project doc
+        doc_ref = db.collection("projects").document(project_id)
+        doc = doc_ref.get()
+
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Project not found")
+
+        # Ensure user owns the project
+        if doc.to_dict().get("uid") != uid:
+            raise HTTPException(status_code=403, detail="Not authorized to update this project")
+
+        # Update the field
+        doc_ref.update({field: data})
+
+        return {"message": f"Updated {field} successfully", "project_id": project_id}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# -------------------------------
+# Get all projects for a user
+# -------------------------------
+
+
+# example frontend call
+# const session = await getSession();
+
+# const res = await fetch("http://127.0.0.1:8000/projects", {
+#   method: "GET",
+#   headers: {
+#     "Authorization": `Bearer ${session.token}`
+#   }
+# });
+
+# const data = await res.json();
+# console.log("User projects:", data.projects);
+
+
+
+@app.get("/projects")
+def get_user_projects(uid: str = Depends(verify_token)):
+    try:
+        projects_ref = db.collection("projects").where("uid", "==", uid).stream()
+
+        projects = []
+        for doc in projects_ref:
+            project = doc.to_dict()
+            project["id"] = doc.id  # include Firestore doc ID
+            projects.append(project)
+
+        return {"projects": projects}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    # response example
+#     {
+#   "projects": [
+#     {
+#       "id": "abc123",
+#       "uid": "ESc42kzwwcPlPzEAqPCqtJ65pJu2",
+#       "project_name": "Crowder Simulation Project",
+#       "project_description": "Some description",
+#       "avg_sim_perc": 85.4,
+#       "no_sim": 10,
+#       "sim_response": [],
+#       "created_date": "2025-09-22T12:34:56.789Z"
+#     },
+#     {
+#       "id": "xyz456",
+#       "uid": "ESc42kzwwcPlPzEAqPCqtJ65pJu2",
+#       "project_name": "",
+#       "project_description": "",
+#       "avg_sim_perc": null,
+#       "no_sim": null,
+#       "sim_response": [],
+#       "created_date": "2025-09-21T08:10:11.123Z"
+#     }
+#   ]
+# }

@@ -73,7 +73,7 @@ const LandingPage = () => {
           >
             <div className="flex justify-between items-center px-8 py-2 bg-black/30 backdrop-blur-md ">
               <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-white rounded-sm" />{" "}
+                
                 {/* Logo placeholder */}
                 <span className="font-bold tracking-wider">Crowder</span>
               </div>

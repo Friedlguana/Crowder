@@ -1,6 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Loader from "../Components/loader";
 import { Link } from "react-router-dom";
+import {
+  getSession,
+  logout,
+} from "../lib/db";
 
 const projects = [
   { name: "hackthenorth", date: "Sep 14, 2025",perc:20 },
@@ -13,6 +17,36 @@ const projects = [
 const username = "rijul"
 
 export default function Dashboard() {
+  const [session, setSession] = useState(null);
+
+  const test = async() =>{
+    const session = await getSession();
+        const res = await fetch("http://127.0.0.1:8000/get_user", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${session.token}`,  // 🔑 send token
+          },
+        });
+        const data = await res.json();
+        console.log("Backend user:", data);
+  }
+
+  const handleLogout = async () => {
+      try {
+        await logout();
+        console.log("User logged out");
+        setSession(null);
+      } catch (err) {
+        console.error("Logout error:", err);
+        setError(err.message);
+      }
+    };
+
+   useEffect(() => {
+        test()
+      }, []);
+
+
   return (
     <div className="min-h-screen font-mono bg-black text-white">
       {/* Header */}
@@ -25,9 +59,11 @@ export default function Dashboard() {
           <button className="bg-neutral-800 px-4 py-2 rounded hover:bg-neutral-700 transition">
             + New Project
           </button>
-          <button className="text-sm text-neutral-400 hover:text-white">
-            Logout →
-          </button>
+          <Link to={"/"}>
+            <button onClick={handleLogout()} className="text-sm text-neutral-400 hover:text-white">
+              Logout →
+            </button>
+          </Link>
         </div>
       </header>
 
