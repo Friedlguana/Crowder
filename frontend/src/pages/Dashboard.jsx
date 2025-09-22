@@ -29,7 +29,47 @@ export default function Dashboard() {
   });
   const [sentimentScore, setSentimentScore] = useState(0);
   const [allResponses, setAllResponses] = useState([]); // ✅ useState instead of plain var
-  const [number,setNumber] = useState(0);
+  const [number,setNumber] = useState(1);
+  const [age,setAge] = useState(null);
+  const [region,setRegion] = useState(null);
+  const [industry,setIndustry] = useState(null);
+
+
+const handleSubmit = () => {
+  if (!inputText.trim()) return Promise.resolve();
+
+  return fetch("http://127.0.0.1:8000/api/submitIdea", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idea_text: inputText, age, region, industry }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("Response:", data.message);
+      setJsonObject(data.message);
+      setPoint((prev) => prev + 1);
+      setShowPopup(true);
+
+      // Add response + globe point
+      addResponse(data.message);
+      addPoints({
+        lat: Number(data.message.latitude || 0),
+        lng: Number(data.message.longitude || 0),
+        size: 1,
+      });
+
+      // Update agent distribution
+      if (data.message.sentimentScore !== undefined) {
+        calculateAgents(Number(data.message.sentimentScore));
+      }
+
+      // Refresh response list
+      setAllResponses(getResponses());
+    })
+    .catch((err) => {
+      console.error("Error:", err);
+    });
+};
 
   
 
@@ -45,50 +85,32 @@ export default function Dashboard() {
     }
   };
 
-  const handleSubmit = () => {
-    if (!inputText.trim()) return; // prevent empty submit
+ const baaphandle = async () => {
+  if (!inputText.trim()) return;
 
-    setLoading(true);
-    fetch("http://127.0.0.1:8000/api/submitIdea", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idea_text: inputText }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Response:", data.message);
-        setJsonObject(data.message);
-        setPoint((prev) => prev + 1);
-        setShowPopup(true);
+  setLoading(true);
 
-        // Add response + globe point
-        addResponse(data.message);
-        addPoints({
-          lat: Number(data.message.latitude || 0),
-          lng: Number(data.message.longitude || 0),
-          size: 1,
-        });
+  try {
+    // Run multiple submissions in parallel
+    const promises = [];
+    for (let i = 0; i < number; i++) {
+      promises.push(handleSubmit());
+    }
+    await Promise.all(promises);
+  } catch (err) {
+    console.error("Batch error:", err);
+  } finally {
+    setLoading(false); // ✅ only stop loading once all requests done
+  }
+};
 
-        // Update agent distribution
-        if (data.message.sentimentScore !== undefined) {
-          calculateAgents(Number(data.message.sentimentScore));
-        }
 
-        // Refresh response list
-        setAllResponses(getResponses());
-
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error:", err);
-        setLoading(false);
-      });
-  };
+  
 
   return (
     <div className="h-screen relative font-mono bg-black text-white flex">
       {/* Left Sidebar */}
-      <LeftSideBar number setNumber />
+      <LeftSideBar number={number} age={age} region={region} industry={industry} setAge={setAge} setRegion={setRegion} setIndustry={setIndustry} setNumber={setNumber} />
       {loading && <LoadingScreen isloading={loading} onClose={() => {
               setLoading(false);
       }}/>}
@@ -133,12 +155,12 @@ export default function Dashboard() {
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                handleSubmit();
+                baaphandle();
               }
             }}
           />
           <button
-            onClick={handleSubmit}
+            onClick={baaphandle}
             className="bg-neutral-700 shadow-lg shadow-white/20 ease-in duration-200 active:translate-y-1 active:shadow-neutral-800 rounded-full px-6 py-3.5 text-xl hover:bg-neutral-600"
           >
              <ShinyText 

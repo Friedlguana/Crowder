@@ -19,6 +19,7 @@
     "js-sha256": "^0.11.1",
     "lucide-react": "^0.544.0",
     "r3f-globe": "^1.5.0",
+    "rc-slider": "^11.1.9",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-globe.gl": "^2.36.0",
