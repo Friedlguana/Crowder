@@ -196,7 +196,7 @@ place
 - Only provide the JSON in the output format below. Do not include extra text.
 
 Output Format (for each persona):
-{
+{{
   "review": "string",
   "name": "string",
   "jobTitle": "string",
@@ -206,7 +206,7 @@ Output Format (for each persona):
   "age": int,
   "gender": "string",
   "sentimentScore": "float"
-}
+}}
 '''
 
     # Call LLM with key cycling
