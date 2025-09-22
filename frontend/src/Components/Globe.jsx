@@ -27,7 +27,7 @@ export default function GlobeViz({ newpoint }) {
     controls.maxDistance = 100;
 
     // Load world map data
-    fetch("//cdn.jsdelivr.net/npm/world-atlas@2/land-50m.json")
+    fetch("//cdn.jsdelivr.net/npm/world-atlas/land-110m.json")
       .then((res) => res.json())
       .then((landTopo) => {
         const features = topojson.feature(landTopo, landTopo.objects.land);
