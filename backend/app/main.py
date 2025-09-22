@@ -79,6 +79,9 @@ def safe_json_load(text: str):
 # ----------------------------
 class IdeaSubmission(BaseModel):
     idea_text: str
+    age: str
+    region: str
+    industry: str
 
 class PersonaProfile(BaseModel):
     age: int
@@ -147,20 +150,20 @@ async def idea_submission(submission: IdeaSubmission):
     ideas_db[idea_id] = submission.idea_text
     idea_counter += 1
 
-    # Simulate personas
-    num_personas = random.randint(2, 5)
-    feedback_list = []
-    for pid in range(1, num_personas + 1):
-        persona = PersonaFeedback(
-            persona_id=pid,
-            persona_profile=PersonaProfile(
-                age=random.randint(18, 45),
-                location=random.choice(["USA", "India", "UK", "Germany"])
-            ),
-            response_message=f"Persona {pid} simulated response for idea '{submission.idea_text}'."
-        )
-        feedback_list.append(persona)
-    feedback_db[idea_id] = feedback_list
+    # # Simulate personas
+    # num_personas = random.randint(2, 5)
+    # feedback_list = []
+    # for pid in range(1, num_personas + 1):
+    #     persona = PersonaFeedback(
+    #         persona_id=pid,
+    #         persona_profile=PersonaProfile(
+    #             age=random.randint(18, 45),
+    #             location=random.choice(["USA", "India", "UK", "Germany"])
+    #         ),
+    #         response_message=f"Persona {pid} simulated response for idea '{submission.idea_text}'."
+    #     )
+    #     feedback_list.append(persona)
+    # feedback_db[idea_id] = feedback_list
 
     # Prepare prompt
     prompt = f'''You are (name), who is a (jobTitle) living in (city), (country). 
@@ -175,6 +178,14 @@ Do not provide anything else but the output format that is requested.
 Randomly generate the demographic details.
 
 Idea: {submission.idea_text}
+
+[OPTIONAL (Only use these fields if there are meaningful inputs, if the fields have
+values as gibberish or "null", ignore those certain fields):
+
+Target age range: {submission.age}
+Target region range: {submission.region}
+Target Industry: {submission.industry}
+]
 
 Output Format:
 {{
