@@ -13,6 +13,8 @@ import {
   signInWithPopup
 } from "firebase/auth";
 
+export let username = "";
+
 // Firebase config
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,
@@ -83,6 +85,7 @@ const getSession = () => {
       (user) => {
         if (user) {
           user.getIdToken().then((token) => {
+            username = user.displayName;
             resolve({ user, token });
           });
         } else {

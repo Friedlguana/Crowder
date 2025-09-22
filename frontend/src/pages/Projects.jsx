@@ -3,8 +3,10 @@ import Loader from "../Components/loader";
 import { Link } from "react-router-dom";
 import {
   getSession,
+  username,
   logout,
 } from "../lib/db";
+
 
 const projects = [
   { name: "hackthenorth", date: "Sep 14, 2025",perc:20 },
@@ -14,33 +16,28 @@ const projects = [
   { name: "vapi", date: "Sep 14, 2025",perc:98 },
   { name: "yc", date: "Sep 14, 2025",perc:12 },
 ];
-const username = "rijul"
 
-export default function Dashboard() {
+
+export default function Projects() {
   const [session, setSession] = useState(null);
+  const [createdProject,setCreatedProject] = useState(null);
+  const [projectName,setProjectName] = useState("");
+
 
   const test = async() =>{
     const session = await getSession();
-        const res = await fetch("http://127.0.0.1:8000/get_user", {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${session.token}`,  // 🔑 send token
-          },
-        });
-        const data = await res.json();
-        console.log("Backend user:", data);
+    console.log("user",session.user)
+    setSession(session);
+      const res = await fetch("http://127.0.0.1:8000/get_user", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${session.token}`,  // 🔑 send token
+        },
+      });
+      const data = await res.json();
   }
 
-  const handleLogout = async () => {
-      try {
-        await logout();
-        console.log("User logged out");
-        setSession(null);
-      } catch (err) {
-        console.error("Logout error:", err);
-        setError(err.message);
-      }
-    };
+ 
 
    useEffect(() => {
         test()
@@ -59,17 +56,13 @@ export default function Dashboard() {
           <button className="bg-neutral-800 px-4 py-2 rounded hover:bg-neutral-700 transition">
             + New Project
           </button>
-          <Link to={"/"}>
-            <button onClick={handleLogout()} className="text-sm text-neutral-400 hover:text-white">
-              Logout →
-            </button>
-          </Link>
+          <input type="text" className="fixed translate-y-17 px-5 rounded-lg w-[150px] bg-zinc-800 py-2" placeholder="Name" value={projectName} onChange={(e)=>setProjectName(e.target.value)} />
         </div>
       </header>
 
       {/* Welcome message */}
       <div className="px-8 py-6">
-        <h1 className="text-xl font-semibold">Welcome {username},</h1>
+        <h1 className="text-xl font-semibold">Welcome {username}</h1>
         <p className="text-neutral-400 text-sm mt-1">
           Manage your AI simulation projects and view insights
         </p>
@@ -126,7 +119,7 @@ export default function Dashboard() {
 
             {/* Open Button */}
             <Link to={"/dashboard"}>
-                <button className="w-full bg-neutral-100 text-black py-2 text-sm font-semibold rounded hover:bg-white transition">
+                <button className="w-full cursor-pointer bg-neutral-100 text-black py-2 text-sm font-semibold rounded hover:bg-white transition">
                   Open Project →
                 </button>
             </Link>

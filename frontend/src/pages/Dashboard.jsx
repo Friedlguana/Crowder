@@ -29,6 +29,7 @@ export default function Dashboard() {
   });
   const [sentimentScore, setSentimentScore] = useState(0);
   const [allResponses, setAllResponses] = useState([]); // ✅ useState instead of plain var
+  const [number,setNumber] = useState(0);
 
   
 
@@ -87,7 +88,7 @@ export default function Dashboard() {
   return (
     <div className="h-screen relative font-mono bg-black text-white flex">
       {/* Left Sidebar */}
-      <LeftSideBar />
+      <LeftSideBar number setNumber />
       {loading && <LoadingScreen isloading={loading} onClose={() => {
               setLoading(false);
       }}/>}
