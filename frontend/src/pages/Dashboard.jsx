@@ -15,6 +15,7 @@ import { addPoints } from "../../utils/pointsData";
 import { addResponse, getResponses } from "../../utils/AgentResponses";
 
 export default function Dashboard() {
+  const [perc, setPerc] = useState(0);
   const [inputText, setInputText] = useState("");
   const [jsonObject, setJsonObject] = useState({});
   const [showPopup, setShowPopup] = useState(false);
@@ -45,7 +46,6 @@ const handleSubmit = () => {
   })
     .then((res) => res.json())
     .then((data) => {
-      console.log("Response:", data.message);
       setJsonObject(data.message);
       setPoint((prev) => prev + 1);
       setShowPopup(true);
@@ -89,20 +89,27 @@ const handleSubmit = () => {
   if (!inputText.trim()) return;
 
   setLoading(true);
+  setPerc(0);
+
+  let completed = 0;
 
   try {
-    // Run multiple submissions in parallel
     const promises = [];
     for (let i = 0; i < number; i++) {
-      promises.push(handleSubmit());
+      const p = handleSubmit().finally(() => {
+        completed++;
+        setPerc(Math.round((completed / number) * 100));
+      });
+      promises.push(p);
     }
     await Promise.all(promises);
   } catch (err) {
     console.error("Batch error:", err);
   } finally {
-    setLoading(false); // ✅ only stop loading once all requests done
+    setLoading(false); // ✅ stop loading once all done
   }
 };
+
 
 
   
@@ -111,7 +118,7 @@ const handleSubmit = () => {
     <div className="h-screen relative font-mono bg-black text-white flex">
       {/* Left Sidebar */}
       <LeftSideBar number={number} age={age} region={region} industry={industry} setAge={setAge} setRegion={setRegion} setIndustry={setIndustry} setNumber={setNumber} />
-      {loading && <LoadingScreen isloading={loading} onClose={() => {
+      {loading && <LoadingScreen perc={perc} onClose={() => {
               setLoading(false);
       }}/>}
             {showFeedback && <CustomersTestimoniesGrid

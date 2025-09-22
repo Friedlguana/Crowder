@@ -1,11 +1,11 @@
 import React from "react";
 import Loader from "./loader";
 
-const LoadingScreen = ({ isloading , onClose }) => {
+const LoadingScreen = ({ perc , onClose }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/60">
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-xl bg-black/70">
       <div className="bg-neutral-900 text-white font-sans rounded-lg shadow-xl w-[450px] p-6 border border-neutral-700">
-        <Loader isStatic={false} isLoading={isloading} />
+        <Loader isStatic={true} percentage={perc}  />
         <div className="flex justify-between mt-6">
           <button
             onClick={onClose}
