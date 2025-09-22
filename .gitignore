@@ -1,0 +1,4 @@
+backend/app/.env
+backend/app/crowder-e26dc-firebase-adminsdk-fbsvc-111b4a2222.json
+!package.json
+!tsconfig.json

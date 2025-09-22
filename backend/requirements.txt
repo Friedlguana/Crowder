@@ -3,4 +3,5 @@ uvicorn
 psycopg2-binary
 pydantic
 sqlalchemy
-groq
+google-genai
+firebase-admin

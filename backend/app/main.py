@@ -8,12 +8,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from google import genai
 from geopy.geocoders import Nominatim
+import firebase_admin
+from firebase_admin import credentials, firestore, auth
+import jwt
+import datetime
+
 
 # ----------------------------
 # Setup
 # ----------------------------
 app = FastAPI()
 load_dotenv()
+cred = credentials.Certificate("backend/app/crowder-e26dc-firebase-adminsdk-fbsvc-111b4a2222.json")
+firebase_admin.initialize_app(cred)
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred)
+
+db = firestore.client()
 
 # Load Gemini API keys
 gemini_api_keys = [
@@ -75,6 +86,15 @@ class PersonaFeedback(BaseModel):
     persona_id: int
     persona_profile: PersonaProfile
     response_message: str
+
+class SignupRequest(BaseModel):
+    username: str
+    email: str
+    password: str  # SHA-256 hashed
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str  # SHA-256 hashed from frontend
 
 # ----------------------------
 # In-memory storage
@@ -190,3 +210,27 @@ Output Format:
         response_data["longitude"] = None
 
     return {"status": "success", "idea_id": idea_id, "provider": key_used, "message": response_data}
+
+# ----------------------------
+# 2. Get user details
+# ----------------------------
+@app.post("/get_user/{uid}")
+def get_user(uid: str):
+    try:
+        # Get user from Firebase Auth
+        user = auth.get_user(uid)
+
+        # Optionally, also fetch extra profile info from Firestore
+        user_ref = db.collection("users").document(uid).get()
+        user_data = user_ref.to_dict() if user_ref.exists else {}
+
+        return {
+            "uid": user.uid,
+            "email": user.email,
+            "display_name": user.display_name,
+            "phone_number": user.phone_number,
+            "custom_claims": user.custom_claims,
+            "profile": user_data  # Extra data from Firestore
+        }
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
