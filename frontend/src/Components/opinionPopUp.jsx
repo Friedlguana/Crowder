@@ -25,6 +25,7 @@ const OpinionPopUp = ({ setShow, response, onClose }) => {
         onClose()
         setShow(true)
     }} className="text-sm text-neutral-300 italic line-clamp-3">
+      
         {response.review}
       </p>
     </div>

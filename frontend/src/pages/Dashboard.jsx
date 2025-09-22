@@ -7,6 +7,9 @@ import AgentActivity from "../Components/AgentActivity";
 import PredictedSuccessRate from "../Components/PredictedSuccessRate";
 import CustomersTestimoniesGrid from "../Components/Feedback";
 import LoadingScreen from "../Components/LoadingScreen";
+import ShinyText from "../Ui/ShinyText";
+
+
 
 import { addPoints } from "../../utils/pointsData";
 import { addResponse, getResponses } from "../../utils/AgentResponses";
@@ -26,6 +29,8 @@ export default function Dashboard() {
   });
   const [sentimentScore, setSentimentScore] = useState(0);
   const [allResponses, setAllResponses] = useState([]); // ✅ useState instead of plain var
+
+  
 
   const calculateAgents = (score) => {
     setSentimentScore((prev) => prev + score);
@@ -135,7 +140,13 @@ export default function Dashboard() {
             onClick={handleSubmit}
             className="bg-neutral-700 shadow-lg shadow-white/20 ease-in duration-200 active:translate-y-1 active:shadow-neutral-800 rounded-full px-6 py-3.5 text-xl hover:bg-neutral-600"
           >
-            ↑
+             <ShinyText 
+                text="↑" 
+                disabled={false} 
+                speed={3} 
+                className='custom-class text-amber-100' 
+              />
+            
           </button>
         </div>
 

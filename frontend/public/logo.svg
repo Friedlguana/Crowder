@@ -1,0 +1,23 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="256" height="256" fill="white"/>
+<g>
+    <!-- Background shape -->
+    <rect width="256" height="256" rx="52" fill="#2c2c54"/>
+
+    <!-- Lightbulb for 'ideas' -->
+    <path d="M128 48C110.327 48 96 62.3269 96 80C96 90.5487 101.442 99.8732 109.957 106.015L108 116H148L146.043 106.015C154.558 99.8732 160 90.5487 160 80C160 62.3269 145.673 48 128 48Z" fill="#FEE715"/>
+    <path d="M128 116H108V132H148V116H128Z" fill="#FEE715"/>
+    <path d="M124 132H132V140H124V132Z" fill="#FEE715"/>
+    <rect x="120" y="140" width="16" height="4" fill="#FEE715"/>
+    <rect x="116" y="144" width="24" height="4" fill="#FEE715"/>
+    
+    <!-- Group of heads to represent 'crowd' -->
+    <path d="M180 180H76C72.6863 180 70 177.314 70 174V154C70 150.686 72.6863 148 76 148H180C183.314 148 186 150.686 186 154V174C186 177.314 183.314 180 180 180Z" fill="#F7F7FF"/>
+    <circle cx="128" cy="148" r="40" fill="#F7F7FF"/>
+    <path d="M192 180C192 157.909 174.091 140 152 140C152 140 152 140 152 140H104C81.9086 140 64 157.909 64 180V200H192V180Z" fill="#F7F7FF"/>
+
+    <!-- Chat bubbles for 'responses' -->
+    <circle cx="84" cy="112" r="16" fill="#F7F7FF"/>
+    <path d="M168 120C168 111.163 160.837 104 152 104C143.163 104 136 111.163 136 120C136 128.837 143.163 136 152 136C160.837 136 168 128.837 168 120Z" fill="#F7F7FF"/>
+</g>
+</svg>
