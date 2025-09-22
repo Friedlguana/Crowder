@@ -92,14 +92,8 @@ class PersonaFeedback(BaseModel):
     persona_profile: PersonaProfile
     response_message: str
 
-class SignupRequest(BaseModel):
-    username: str
-    email: str
-    password: str  # SHA-256 hashed
-
-class LoginRequest(BaseModel):
-    email: str
-    password: str  # SHA-256 hashed from frontend
+class ProjectPayload(BaseModel):
+    name: str
 
 # ----------------------------
 # In-memory storage
@@ -257,3 +251,59 @@ def get_user(user=Depends(verify_token)):
         "phone_number": user.phone_number,
         "custom_claims": user.custom_claims,
     }
+
+# ----------------------------
+# 3. create project
+# ----------------------------
+@app.post("/create_project")
+async def create_project(payload: ProjectPayload, user=Depends(verify_token)):
+    try:
+        # Create new project inside user's projects subcollection
+        doc_ref = (
+            db.collection("users")
+            .document(user.uid)
+            .collection("projects")
+            .add({
+                "name": payload.name,
+                "latestIdea": "",
+                "agentsArray": [],
+                "date": datetime.utcnow().isoformat().split("T")[0]
+            })
+        )
+        project_id = doc_ref[1].id
+
+        return {
+            "message": "successfully created project",
+            "projectID": project_id
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+        
+    
+# ----------------------------
+# 3. fetch projects
+# ----------------------------
+@app.get("/get_projects/")
+async def get_projects(user=Depends(verify_token)):
+    try:
+        # Reference to the user's projects subcollection
+        projects_ref = (
+            db.collection("users")
+            .document(user.uid)
+            .collection("projects")
+            .stream()
+        )
+
+        projects = []
+        for doc in projects_ref:
+            project = doc.to_dict()
+            project["projectID"] = doc.id  # include the auto-generated ID
+            projects.append(project)
+
+        return {
+            "uid": user.uid,
+            "projects": projects
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
