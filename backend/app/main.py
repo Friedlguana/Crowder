@@ -169,26 +169,34 @@ async def idea_submission(submission: IdeaSubmission):
     prompt = f'''You are (name), who is a (jobTitle) living in (city), (country). 
 You are (age) years old and a (gender). Review the following idea honestly.
 Factor in the demographic that is provided to you while giving your opinion.
-If the idea already exists or is implemented, the review must acknowledge it and be 
-honest if the idea is going to pan out or no.
 If the idea is bad or not good enough, it must be stated along with the reason.
 If the idea is good or resonates with you, you should also state accordingly why.
 The review shouldn't be more than 3 sentences.
 Do not provide anything else but the output format that is requested.
-Randomly generate the demographic details.
 
-Idea: {submission.idea_text}
+Product Idea Title: "{submission.idea_text}"
 
 [OPTIONAL (Only use these fields if there are meaningful inputs, if the fields have
 values as gibberish or "null", ignore those certain fields):
-
 Target age range: {submission.age}
 Target region range: {submission.region}
 Target Industry: {submission.industry}
 ]
 
-Output Format:
-{{
+Instructions for personas:
+
+- For each persona, randomly generate demographic details. Do not always include popular
+choice names. It should be a good mix of everything that exists. Give equal chances for every
+place
+- Each persona must consider cultural, economic, and local market context when reviewing the idea.
+- Feedback from each persona must include:
+  - a short review (3 sentences max)
+  - sentimentScore (0-100) reflecting positivity/negativity of the review
+- Ensure that even if the idea is already implemented somewhere, the review is honest about its potential.
+- Only provide the JSON in the output format below. Do not include extra text.
+
+Output Format (for each persona):
+{
   "review": "string",
   "name": "string",
   "jobTitle": "string",
@@ -197,8 +205,8 @@ Output Format:
   "country": "string",
   "age": int,
   "gender": "string",
-  "sentimentScore": "float"(out of 100)
-}}
+  "sentimentScore": "float"
+}
 '''
 
     # Call LLM with key cycling
