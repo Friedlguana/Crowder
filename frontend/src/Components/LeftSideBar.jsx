@@ -18,7 +18,7 @@ const LeftSideBar = ({ number, age, region, industry, setAge, setRegion, setIndu
       {/* Projects Button */}
       <div className="mb-6">
         <Link to={"/projects"}>
-          <button className="hover:bg-neutral-700 px-4 py-2 rounded text-sm w-full ">
+          <button className="hover:bg-neutral-700 bg-neutral-800 px-4 py-2 rounded text-sm w-full ">
             ← Projects View
           </button>
         </Link>
@@ -32,12 +32,12 @@ const LeftSideBar = ({ number, age, region, industry, setAge, setRegion, setIndu
         </select>
       </div>
 
-      <button className="bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded text-sm w-full mb-6">
+      {/* <button className="bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded text-sm w-full mb-6">
         + Create New Session
       </button>
 
       {/* Analysis Sessions */}
-      <div className="flex-1 overflow-y-auto">
+      {/*<div className="flex-1 overflow-y-auto">
         <p className="text-xs text-neutral-500 mb-2">Analysis Sessions</p>
         <ul className="space-y-2 text-sm">
           <li className="truncate">
@@ -49,7 +49,7 @@ const LeftSideBar = ({ number, age, region, industry, setAge, setRegion, setIndu
             <span className="text-neutral-500 block text-xs">9/14/2025</span>
           </li>
         </ul>
-      </div>
+      </div> */}
 
       {/* Advanced Personas Dropdown */}
       <div className="mt-6">
@@ -103,7 +103,7 @@ const LeftSideBar = ({ number, age, region, industry, setAge, setRegion, setIndu
       </div>
 
       {/* Footer */}
-      <div className="text-xs text-neutral-500 mt-4">
+      <div className="text-xs absolute bottom-10 text-neutral-500 mt-4">
         199 Auth0 users loaded
         <br />
         No analysis running

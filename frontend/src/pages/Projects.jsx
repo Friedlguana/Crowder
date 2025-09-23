@@ -72,9 +72,22 @@ const fetchProjects = async () => {
   });
 
   const data = await res.json();
-  setProjects(data);
-  console.log("data",data);
+  setProjects(data.projects);
+  console.log("data",data.projects);
 };
+
+// utils function (inside Projects component or separate utils file)
+const getAveragePerc = (agentsArray) => {
+  if (!agentsArray || agentsArray.length === 0) return 0;
+  
+  const total = agentsArray.reduce((sum, agent) => {
+    // Fallback to 0 if agent.perc doesn’t exist
+    return sum + (agent.sentimentScore || 0);
+  }, 0);
+
+  return Math.round(total / agentsArray.length);
+};
+
 
 useEffect(() => {
   const init = async () => {
@@ -136,7 +149,7 @@ useEffect(() => {
 
       {/* Project cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-8 pb-12">
-        {projects_test.map((project, idx) => (
+        {projects.map((project, idx) => (
           <div
             key={idx}
             className="bg-neutral-900 border border-neutral-800 rounded-md p-5 flex flex-col justify-between"
@@ -159,14 +172,14 @@ useEffect(() => {
 
             {/* Status */}
             <p className="text-sm text-neutral-400 mb-4">
-              You are on track to reach engagement goals.
+              {project.latestIdea}
             </p>
 
             {/* Progress */}
             <div className="mb-2">
               <div className="flex items-center justify-between mt-1">
                 <div className="w-3/4">
-                    <Loader isStatic={true} percentage={project.perc} />
+                    <Loader isStatic={true} percentage={getAveragePerc(project.agentsArray)}  />
                 </div>
                 {/* <div className="flex space-x-1">
                   {Array.from({ length: 30 }).map((_, i) => (
@@ -181,7 +194,7 @@ useEffect(() => {
             </div>
 
             {/* Simulations */}
-            <p className="text-xs text-neutral-500 mb-4">↑ 0 simulations</p>
+            <p className="text-xs text-neutral-500 mb-4">↑ {project.agentsArray.length} simulations</p>
 
             {/* Open Button */}
             <Link to={"/dashboard"} >

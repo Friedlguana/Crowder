@@ -38,55 +38,75 @@ export default function Dashboard() {
   const [industry,setIndustry] = useState("");
 
 
-const handleSubmit = () => {
-  if (!inputText.trim()) return Promise.resolve();
+const handleSubmit = async (sessionObj) => {
+  if (!inputText.trim()) return null;
 
-  return fetch("http://127.0.0.1:8000/api/submitIdea", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idea_text: inputText, age, region, industry }),
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      setJsonObject(data.message);
-      setPoint((prev) => prev + 1);
-      setShowPopup(true);
-
-      // Add response + globe point
-      addResponse(data.message);
-      addPoints({
-        lat: Number(data.message.latitude || 0),
-        lng: Number(data.message.longitude || 0),
-        size: 1,
-      });
-
-      // Update agent distribution
-      if (data.message.sentimentScore !== undefined) {
-        calculateAgents(Number(data.message.sentimentScore));
-      }
-
-      // Refresh response list
-      setAllResponses(getResponses());
-    })
-    .catch((err) => {
-      console.error("Error:", err);
+  try {
+    const res = await fetch("http://127.0.0.1:8000/api/submitIdea", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${sessionObj?.token || ""}`
+      },
+      body: JSON.stringify({ idea_text: inputText, age, region, industry }),
     });
+
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+    const data = await res.json();
+
+    setJsonObject(data.message);
+    setPoint((prev) => prev + 1);
+    setShowPopup(true);
+
+    // Save response locally + globally
+    addResponse(data.message);
+    setAllResponses(getResponses());
+
+    // Globe point
+    addPoints({
+      lat: Number(data.message.latitude || 0),
+      lng: Number(data.message.longitude || 0),
+      size: 1,
+    });
+
+    // Agent stats
+    if (data.message.sentimentScore !== undefined) {
+      calculateAgents(Number(data.message.sentimentScore));
+    }
+
+    return data.message;
+  } catch (err) {
+    console.error("Submit error:", err);
+    return null;
+  }
 };
 
-const UpdateDataBase = async (sessionObj) => {
-  const resp = await getResponses();
-  const res = await fetch(`http://127.0.0.1:8000/update_project/${ActiveProject.id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${sessionObj?.token || ""}`,
-    },
-    body: JSON.stringify({ agentsArray: resp, latestIdea: inputText }),
-  });
 
-  const data = await res.json();
-  console.log(data);
+const UpdateDataBase = async (sessionObj, latestIdea) => {
+  try {
+    const resp = getResponses();
+    const res = await fetch(
+      `http://127.0.0.1:8000/update_project/${ActiveProject.projectID}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${sessionObj?.token || ""}`,
+        },
+        body: JSON.stringify({ agentsArray: resp, latestIdea:inputText }),
+      }
+    );
+
+    if (!res.ok) throw new Error(`Update failed: ${res.status}`);
+
+    const data = await res.json();
+    console.log("DB updated:", data);
+  } catch (err) {
+    console.error("DB update error:", err);
+  }
 };
+
 
 
   const calculateAgents = (score) => {
@@ -101,35 +121,56 @@ const UpdateDataBase = async (sessionObj) => {
     }
   };
 
- const baaphandle = async () => {
+const baaphandle = async () => {
   if (!inputText.trim()) return;
 
   setLoading(true);
-  const temp = await getSession();
-  setSession(temp);
   setPerc(0);
 
-  let completed = 0;
-
   try {
+    const tempSession = await getSession();
+    setSession(tempSession);
+
+    let completed = 0;
     const promises = [];
+
     for (let i = 0; i < number; i++) {
-      const p = handleSubmit().finally(() => {
+      const p = handleSubmit(tempSession).finally(() => {
         completed++;
         setPerc(Math.round((completed / number) * 100));
       });
       promises.push(p);
     }
-    await Promise.all(promises);
+
+    const results = await Promise.all(promises);
+    const lastResponse = results.filter(Boolean).pop();
+
+    if (lastResponse) {
+      await UpdateDataBase(tempSession, lastResponse.idea_text);
+    }
   } catch (err) {
     console.error("Batch error:", err);
   } finally {
-    setLoading(false); // ✅ stop loading once all done
-    UpdateDataBase(temp); 
+    setLoading(false);
   }
 };
 
 
+
+useEffect(() => {
+  if (ActiveProject?.agentsArray?.length) {
+    const existing = ActiveProject.agentsArray;
+    setAllResponses(existing);
+    existing.forEach((resp) => {
+      addResponse(resp); // push into global utils
+      addPoints({
+        lat: Number(resp.latitude || 0),
+        lng: Number(resp.longitude || 0),
+        size: 1,
+      });
+    });
+  }
+}, []);
 
   
 
