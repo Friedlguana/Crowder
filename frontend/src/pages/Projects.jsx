@@ -45,7 +45,7 @@ export default function Projects() {
   const handleCreateProject = async () => {
   if (!projectName.trim()) return;
 
-  const res = await fetch("http://127.0.0.1:8000/update_project", {
+  const res = await fetch("http://127.0.0.1:8000/create_project", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
