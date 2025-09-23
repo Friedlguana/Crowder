@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import LeftSideBar from "../Components/LeftSideBar";
 import GlobeComponent from "../Components/Globe";
 import OpinionPopUp from "../Components/opinionPopUp";
@@ -8,16 +8,18 @@ import PredictedSuccessRate from "../Components/PredictedSuccessRate";
 import CustomersTestimoniesGrid from "../Components/Feedback";
 import LoadingScreen from "../Components/LoadingScreen";
 import ShinyText from "../Ui/ShinyText";
-
-
-
 import { addPoints } from "../../utils/pointsData";
 import { addResponse, getResponses } from "../../utils/AgentResponses";
+import { ActiveProject } from "../lib/utils";
+import {
+  getSession,
+} from "../lib/db";
 
 export default function Dashboard() {
   const [perc, setPerc] = useState(0);
   const [inputText, setInputText] = useState("");
   const [jsonObject, setJsonObject] = useState({});
+  const [session, setSession] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -71,7 +73,21 @@ const handleSubmit = () => {
     });
 };
 
-  
+const UpdateDataBase = async (sessionObj) => {
+  const resp = await getResponses();
+  const res = await fetch(`http://127.0.0.1:8000/update_project/${ActiveProject.id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${sessionObj?.token || ""}`,
+    },
+    body: JSON.stringify({ agentsArray: resp, latestIdea: inputText }),
+  });
+
+  const data = await res.json();
+  console.log(data);
+};
+
 
   const calculateAgents = (score) => {
     setSentimentScore((prev) => prev + score);
@@ -89,6 +105,8 @@ const handleSubmit = () => {
   if (!inputText.trim()) return;
 
   setLoading(true);
+  const temp = await getSession();
+  setSession(temp);
   setPerc(0);
 
   let completed = 0;
@@ -107,6 +125,7 @@ const handleSubmit = () => {
     console.error("Batch error:", err);
   } finally {
     setLoading(false); // ✅ stop loading once all done
+    UpdateDataBase(temp); 
   }
 };
 

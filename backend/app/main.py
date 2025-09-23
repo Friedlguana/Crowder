@@ -11,7 +11,6 @@ from geopy.geocoders import Nominatim
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 import jwt
-import datetime
 from fastapi import Body, Path
 import traceback
 
@@ -21,10 +20,9 @@ import traceback
 # ----------------------------
 app = FastAPI()
 load_dotenv()
-cred = credentials.Certificate("./crowder-e26dc-firebase-adminsdk-fbsvc-111b4a2222.json")
+cred = credentials.Certificate("C:\\soma\\desktop\\devjams\\Crowder\\backend\\app\\crowder-e26dc-firebase-adminsdk-fbsvc-111b4a2222.json")
 firebase_admin.initialize_app(cred)
-if not firebase_admin._apps:
-    firebase_admin.initialize_app(cred)
+
 
 db = firestore.client()
 
@@ -255,22 +253,30 @@ def get_user(user=Depends(verify_token)):
 # ----------------------------
 # 3. create project
 # ----------------------------
+
+# payload: ProjectPayload, user=Depends(verify_token)
+        # data = {
+        #     "uid": user.uid,
+        #     "name": payload.name,
+        #     "latestIdea": "",
+        #     "agentsArray": [],
+        # }
+
+
 @app.post("/create_project")
 async def create_project(payload: ProjectPayload, user=Depends(verify_token)):
     try:
-        # Create new project inside user's projects subcollection
-        doc_ref = (
-            db.collection("users")
-            .document(user.uid)
-            .collection("projects")
-            .add({
-                "name": payload.name,
-                "latestIdea": "",
-                "agentsArray": [],
-                "date": datetime.utcnow().isoformat().split("T")[0]
-            })
-        )
-        project_id = doc_ref[1].id
+        # Create a document reference with an auto-generated ID
+        data = {
+            "uid": user.uid,
+            "name": payload.name,
+            "latestIdea": "",
+            "agentsArray": [],
+        }
+        doc_ref = db.collection("projects").document()  # no argument → auto ID
+        doc_ref.set(data)  # write data
+
+        project_id = doc_ref.id  # ✅ this works
 
         return {
             "message": "successfully created project",
@@ -279,7 +285,6 @@ async def create_project(payload: ProjectPayload, user=Depends(verify_token)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-        
     
 # ----------------------------
 # 3. fetch projects
@@ -288,12 +293,8 @@ async def create_project(payload: ProjectPayload, user=Depends(verify_token)):
 async def get_projects(user=Depends(verify_token)):
     try:
         # Reference to the user's projects subcollection
-        projects_ref = (
-            db.collection("users")
-            .document(user.uid)
-            .collection("projects")
-            .stream()
-        )
+        projects_ref = db.collection("projects").stream()
+
 
         projects = []
         for doc in projects_ref:
@@ -304,6 +305,32 @@ async def get_projects(user=Depends(verify_token)):
         return {
             "uid": user.uid,
             "projects": projects
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+# ----------------------------
+# 4. update projects
+# ----------------------------
+    
+
+@app.put("/update_project/{project_id}")
+async def update_project(project_id: str, payload: dict = Body(...)):
+    try:
+        doc_ref = db.collection("projects").document(project_id)
+
+        # Check if project exists
+        if not doc_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Project not found")
+
+        # Update only provided fields
+        doc_ref.update(payload)
+
+        return {
+            "message": "Project updated successfully",
+            "projectID": project_id,
+            "updatedFields": payload
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
